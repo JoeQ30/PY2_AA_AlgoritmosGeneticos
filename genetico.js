@@ -38,6 +38,7 @@ function cargar(){
   //  let mat = cv.imread(imgElement);
    // console.log(mat.ucharPtr(100,100))
 
+   
     let p1  = new cv.Point(0, 0);
     let p2  = new cv.Point(20, 20);
     let p3  = new cv.Point(10, 0);
@@ -45,11 +46,17 @@ function cargar(){
     let p5 = new cv.Point(200, 200);
 
 
-    let indiv = new cv.Mat.zeros(255, 255, cv.CV_8U);
+
+
+    let indiv = new cv.Mat.zeros(255, 255, cv.CV_8UC3);
+
+    
     cv.line(indiv, p1, p2, [255, 255, 255, 255], 1)
     cv.line(indiv, p2, p3, [255, 255, 255, 255], 1)
     cv.line(indiv, p3, p4, [255, 0, 0, 255], 2)
     cv.line(indiv, p4, p5, [255, 255, 0, 255], 3)
+    
+    
     
     
 
