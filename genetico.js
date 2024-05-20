@@ -64,6 +64,9 @@ function cargar(){
 
   imgElement.onload = function() {
     // Obtener las dimensiones de la imagen
+
+    let mat = cv.imread(imgElement);
+    console.log(mat.ucharPtr(10,10)); // retorna el RGB de la imagen en la posicion 10,10
     let width = imgElement.naturalWidth;
     let height = imgElement.naturalHeight;
     
@@ -100,8 +103,6 @@ function cargar(){
 
     // Mostrar la imagen
     cv.imshow('canvasOutput', src);
-
-
   };
 }
 var Module = {
