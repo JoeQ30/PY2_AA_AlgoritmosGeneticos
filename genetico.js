@@ -83,13 +83,18 @@ function cargar(){
       // crea el triangulo
       let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
       triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
-
+      
+      let temp = src.clone();
       let color = randomColor();
 
       // rellena el triangulo de color blanco
-      cv.fillConvexPoly(src, triangle, color);
+      cv.fillConvexPoly(temp, triangle, color);
       contador++;
+
+      let alpha = 0.5;  // Ajusta este valor para cambiar la transparencia
+      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
       triangle.delete();
+      temp.delete();
     }
 
     // Mostrar la imagen
