@@ -55,61 +55,61 @@ function randomColor() {
 /**
  * Función que se encarga de cargar la imagen y realizar el proceso de triangulación
  */
-function cargar(){
-  let imgElement = document.getElementById("imageSrc")
-  let inputElement = document.getElementById("fileInput");
-  inputElement.addEventListener("change", (e) => {
-   imgElement.src = URL.createObjectURL(e.target.files[0]);
-  }, false);
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("fileInput").addEventListener("change", cargar);
 
-  imgElement.onload = function() {
-    // Obtener las dimensiones de la imagen
+  function cargar() {
+      let imgElement = document.getElementById("imageSrc");
+      let inputElement = document.getElementById("fileInput");
+      inputElement.addEventListener("change", (e) => {
+          imgElement.src = URL.createObjectURL(e.target.files[0]);
+          imgElement.style.display = "block";
+          document.getElementById("startButton").disabled = false;
+      }, false);
 
-    let mat = cv.imread(imgElement);
-    console.log(mat.ucharPtr(10,10)); // retorna el RGB de la imagen en la posicion 10,10
-    let width = imgElement.naturalWidth;
-    let height = imgElement.naturalHeight;
-    
-    // matriz del tamaño de la imagen de fondo negro
-    let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+      imgElement.onload = function () {
+          // Obtener las dimensiones de la imagen
+          let mat = cv.imread(imgElement);
+          console.log(mat.ucharPtr(10, 10)); // retorna el RGB de la imagen en la posición 10, 10
+          let width = imgElement.naturalWidth;
+          let height = imgElement.naturalHeight;
 
-    // 3 vertices para el triangulo
+          // matriz del tamaño de la imagen de fondo negro
+          let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
 
-    let contador = 0;
+          // 3 vértices para el triángulo
+          let contador = 0;
 
-    while(contador < CANTIDAD_INDIVIDUOS){
+          while (contador < CANTIDAD_INDIVIDUOS) {
+              let p1 = generarPuntoAleatorio(width, height);
+              let p2 = generarPuntoAleatorio(width, height);
+              let p3 = generarPuntoAleatorio(width, height);
 
-      let p1 = generarPuntoAleatorio(width, height);
-      let p2 = generarPuntoAleatorio(width, height);
-      let p3 = generarPuntoAleatorio(width, height);
+              // crea el triángulo
+              let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
+              triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
 
-      // crea el triangulo
-      let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
-      triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
-      
-      let temp = src.clone();
-      let color = randomColor();
+              let temp = src.clone();
+              let color = randomColor();
 
-      // rellena el triangulo de color blanco
-      cv.fillConvexPoly(temp, triangle, color);
-      contador++;
+              // rellena el triángulo de color blanco
+              cv.fillConvexPoly(temp, triangle, color);
+              contador++;
 
-      
-      let alpha = 0.1 + Math.random() * 0.9; 
-      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
-      triangle.delete();
-      temp.delete();
-    }
-
-    // Mostrar la imagen
-    cv.imshow('canvasOutput', src);
-  };
-}
-var Module = {
-  // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-  onRuntimeInitialized() {
-    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+              let alpha = 0.1 + Math.random() * 0.9;
+              cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
+              triangle.delete();
+              temp.delete();
+          }
+      };
   }
+});
 
+  var Module = {
+    // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+    onRuntimeInitialized() {
+      document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+    }
+  }
 
 }
