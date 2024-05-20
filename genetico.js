@@ -70,7 +70,7 @@ function cargar(){
     let width = imgElement.naturalWidth;
     let height = imgElement.naturalHeight;
     
-    // matriz de 255x255 de fondo negro
+    // matriz del tamaño de la imagen de fondo negro
     let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
 
     // 3 vertices para el triangulo
