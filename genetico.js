@@ -91,7 +91,8 @@ function cargar(){
       cv.fillConvexPoly(temp, triangle, color);
       contador++;
 
-      let alpha = 0.5;  // Ajusta este valor para cambiar la transparencia
+      
+      let alpha = 0.1 + Math.random() * 0.9; 
       cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
       triangle.delete();
       temp.delete();
