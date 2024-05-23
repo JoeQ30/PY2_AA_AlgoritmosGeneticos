@@ -5,25 +5,95 @@ const PORCENTAJE_COMBINAR = 0.5;
 const PORCENTAJE_INDIVIDUOS_GENERACION = 0.20;
 
 
-/**
- * Función que se encarga de generar la población inicial
- */
-function seleccion(){
+class Triangulo{
+  constructor(p1, p2, p3, color, alpha) {
+    this.p1 = p1;
+    this.p2 = p2;
+    this.p3 = p3;
+    this.color = color;
+  }
+  dibujar(src) {
+    let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
+    triangle.data32S.set([this.p1.x, this.p1.y, this.p2.x, this.p2.y, this.p3.x, this.p3.y]);
+
+    let temp = src.clone();
+
+    // rellena el triangulo de color
+    cv.fillConvexPoly(temp, triangle, this.color);
+
+    cv.addWeighted(src, 1.0 - this.alpha, temp, this.alpha, 0.0, src);
+    triangle.delete();
+    temp.delete();
+  }
 
 
 }
 
-function mutar(individuo){
+class Individuo {
+  constructor(){
+    this.CANTIDAD_TRIANGULOS = 4;
+    this.triangulos = [];
+  }
+  generarTriangulos(){
+    let contador = 0;
+    while(contador < this.TRIANGULOS){
+
+      let p1 = generarPuntoAleatorio(width, height);
+      let p2 = generarPuntoAleatorio(width, height);
+      let p3 = generarPuntoAleatorio(width, height);
+
+      // crea el triangulo
+      let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
+      triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
+      
+      let temp = src.clone();
+      let color = randomColor();
+
+      // rellena el triangulo de color blanco
+      cv.fillConvexPoly(temp, triangle, color);
+      contador++;
+
+      
+      let alpha = 0.1 + Math.random() * 0.9; 
+      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
+      triangle.delete();
+      temp.delete();
+    }
+
+  }
+
 
 }
 
-function combinar(individuo1, individuo2){
+class Poblacion {
+
+  constructor(){
+
+
+  }
+
+  seleccion(){
+    for(let i = 0; i < CANTIDAD_INDIVIDUOS; i++){
+      let individuo = new Individuo();
+    }
+
+  }
+  
+  mutar(individuo){
+    
+  }
+  
+  combinar(individuo1, individuo2){
+  
+  }
+  
+  fitness(individuo){
+  
+  }
+
 
 }
 
-function fitness(individuo){
-
-}
 
 
 /**
@@ -55,61 +125,71 @@ function randomColor() {
 /**
  * Función que se encarga de cargar la imagen y realizar el proceso de triangulación
  */
-document.addEventListener("DOMContentLoaded", function() {
-  document.getElementById("fileInput").addEventListener("change", cargar);
+function cargar(){
+  let imgElement = document.getElementById("imageSrc")
+  let inputElement = document.getElementById("fileInput");
+  inputElement.addEventListener("change", (e) => {
+   imgElement.src = URL.createObjectURL(e.target.files[0]);
+  }, false);
 
-  function cargar() {
-      let imgElement = document.getElementById("imageSrc");
-      let inputElement = document.getElementById("fileInput");
-      inputElement.addEventListener("change", (e) => {
-          imgElement.src = URL.createObjectURL(e.target.files[0]);
-          imgElement.style.display = "block";
-          document.getElementById("startButton").disabled = false;
-      }, false);
+  imgElement.onload = function() {
+    // Obtener las dimensiones de la imagen
+    console.log("Se ha cargado esto")
 
-      imgElement.onload = function () {
-          // Obtener las dimensiones de la imagen
-          let mat = cv.imread(imgElement);
-          console.log(mat.ucharPtr(10, 10)); // retorna el RGB de la imagen en la posición 10, 10
-          let width = imgElement.naturalWidth;
-          let height = imgElement.naturalHeight;
+    let mat = cv.imread(imgElement);
+    console.log(mat.ucharPtr(10,10)); // retorna el RGB de la imagen en la posicion 10,10
+    let width = imgElement.naturalWidth;
+    let height = imgElement.naturalHeight;
+    
+    // matriz del tamaño de la imagen
+    let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
 
-          // matriz del tamaño de la imagen de fondo negro
-          let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+    // 3 vertices para el triangulo
 
-          // 3 vértices para el triángulo
-          let contador = 0;
+    let contador = 0;
 
-          while (contador < CANTIDAD_INDIVIDUOS) {
-              let p1 = generarPuntoAleatorio(width, height);
-              let p2 = generarPuntoAleatorio(width, height);
-              let p3 = generarPuntoAleatorio(width, height);
+    while(contador < CANTIDAD_INDIVIDUOS){
 
-              // crea el triángulo
-              let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
-              triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
+      let p1 = generarPuntoAleatorio(width, height);
+      let p2 = generarPuntoAleatorio(width, height);
+      let p3 = generarPuntoAleatorio(width, height);
 
-              let temp = src.clone();
-              let color = randomColor();
+      // crea el triangulo
+      let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
+      triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
+      
+      let temp = src.clone();
+      let color = randomColor();
 
-              // rellena el triángulo de color blanco
-              cv.fillConvexPoly(temp, triangle, color);
-              contador++;
+      // rellena el triangulo de color blanco
+      cv.fillConvexPoly(temp, triangle, color);
+      contador++;
 
-              let alpha = 0.1 + Math.random() * 0.9;
-              cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
-              triangle.delete();
-              temp.delete();
-          }
-      };
-  }
-});
-
-  var Module = {
-    // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-    onRuntimeInitialized() {
-      document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+      
+      let alpha = 0.1 + Math.random() * 0.9; 
+      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
+      triangle.delete();
+      temp.delete();
     }
+
+    // Mostrar la imagen
+    cv.imshow('canvasOutput', src);
+  };
+}
+var Module = {
+  // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+  onRuntimeInitialized() {
+    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
   }
+
+};
+
+function genetico(){
+  let generaciones = 0;
+  while (generaciones < GENERACIONES){
+    generaciones++;
+    seleccion();
+  }
+
 
 }

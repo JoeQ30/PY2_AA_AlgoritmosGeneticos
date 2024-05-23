@@ -46,8 +46,19 @@
             <button class="btnStart" id="startButton" disabled>Iniciar</button>
         </div>
     </div>
-    
-    <script src="https://docs.opencv.org/master/opencv.js"></script>
+    <p id="status">OpenCV.js is loading...</p>
+<div>
+  <div class="inputoutput">
+    <img id="imageSrc" alt="No Image" />
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+  </div>
+  <div class="inputoutput">
+    <canvas id="canvasOutput" ></canvas>
+    <div class="caption">canvasOutput</div>
+  </div>
+</div>
+    <script src="genetico.js"></script>
+    <script src="https://docs.opencv.org/master/opencv.js" onload="cargar();"></script>
     <script src="script_AG.js"></script>
 </body>
 </html>
