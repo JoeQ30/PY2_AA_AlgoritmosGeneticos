@@ -11,6 +11,7 @@ class Triangulo{
     this.p2 = p2;
     this.p3 = p3;
     this.color = color;
+    this.alpha = alpha;
   }
   dibujar(src) {
     let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
@@ -33,10 +34,11 @@ class Individuo {
   constructor(){
     this.CANTIDAD_TRIANGULOS = 4;
     this.triangulos = [];
+    let fitness;
   }
   generarTriangulos(){
     let contador = 0;
-    while(contador < this.TRIANGULOS){
+    while(contador < this.CANTIDAD_TRIANGULOS){
 
       let p1 = generarPuntoAleatorio(width, height);
       let p2 = generarPuntoAleatorio(width, height);
@@ -49,16 +51,21 @@ class Individuo {
       let temp = src.clone();
       let color = randomColor();
 
-      // rellena el triangulo de color blanco
-      cv.fillConvexPoly(temp, triangle, color);
-      contador++;
 
       
       let alpha = 0.1 + Math.random() * 0.9; 
-      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
-      triangle.delete();
-      temp.delete();
+      this.triangulos.push(new Triangulo(p1, p2, p3, color, alpha));
+      contador++;
     }
+
+  }
+  fitness(){
+
+  }
+  mutar(){
+
+  }
+  combinar(individuo){
 
   }
 
