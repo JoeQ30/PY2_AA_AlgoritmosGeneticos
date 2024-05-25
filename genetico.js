@@ -165,11 +165,22 @@ class Individuo {
 
 class Poblacion {
 
-  constructor(){
+  constructor(cantidad_individuos){
+    this.cantidad_individuos = cantidad_individuos;
+    this.individuos = [];
 
 
   }
 
+  generaciones(){
+
+    for(let i = 0; i < this.cantidad_individuos; i++){
+      let individuo = new Individuo();
+      individuo.fitness();
+      this.individuos.push(individuo);
+    }
+  
+  }
   seleccion(){
     for(let i = 0; i < indivXGenerationValue; i++){
       let individuo = new Individuo();
