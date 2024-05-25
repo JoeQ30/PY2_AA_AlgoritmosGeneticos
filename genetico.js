@@ -27,7 +27,6 @@ class Triangulo{
     temp.delete();
   }
 
-
 }
 
 class Individuo {

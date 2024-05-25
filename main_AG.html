@@ -45,17 +45,25 @@
 
             <button class="btnStart" id="startButton" disabled>Iniciar</button>
         </div>
+
+        <div id="container2">
+            <div id="inputoutput" style="display: none;">
+                <p>Mejor individuo de la generación: </p>
+                <canvas id="canvasOutput" ></canvas>
+                <div class="caption">canvasOutput</div>
+            </div>
+    
+            <div id="outputImgObj" style="display: none;">
+                <p>Imagen objetivo: </p>
+                <img id="imageSrc" alt="No Image" />
+            </div>
+        </div>
+       
+
     </div>
     <p id="status">OpenCV.js is loading...</p>
 <div>
-  <div class="inputoutput">
-    <img id="imageSrc" alt="No Image" />
-    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
-  </div>
-  <div class="inputoutput">
-    <canvas id="canvasOutput" ></canvas>
-    <div class="caption">canvasOutput</div>
-  </div>
+ 
 </div>
     <script src="genetico.js"></script>
     <script src="https://docs.opencv.org/master/opencv.js" onload="cargar();"></script>

@@ -43,3 +43,10 @@ inputs.forEach(function(input) {
         updateBtnStatus(); // Llama a la función para actualizar el estado del botón
     });
 });
+
+document.getElementById('startButton').addEventListener('click', function() {
+    document.getElementById('container').style.display = 'none';
+    document.getElementById('inputoutput').style.display = 'block';
+    document.getElementById('outputImgObj').style.display = 'block';
+});
+
