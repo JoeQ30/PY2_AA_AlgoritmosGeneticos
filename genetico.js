@@ -58,7 +58,23 @@ class Individuo {
     }
 
   }
+  /**
+   * Metodo que calcula el fitness de un individuo
+   * @param {image} imagen original  
+   */
   fitness(imagen){
+    for(let i = 0; i < imagen.naturalWidth; i++){
+      for(let j = 0; j < imagen.naturalHeight; j++){
+        let pixel = imagen.ucharPtr(i, j);
+        for(let triangulo of this.triangulos){
+          let color = triangulo.color;
+          let distancia = Math.sqrt(Math.pow(pixel[0] - color[0], 2) + Math.pow(pixel[1] - color[1], 2) + Math.pow(pixel[2] - color[2], 2));
+          this.fitness += distancia;
+        }
+      }
+
+
+    }
   }
   mutar(){
     for (let triangulo of this.triangulos) {
@@ -102,15 +118,8 @@ class Poblacion {
 
   }
   
-  mutar(individuo){
-    
-  }
   
   combinar(individuo1, individuo2){
-  
-  }
-  
-  fitness(individuo){
   
   }
 
