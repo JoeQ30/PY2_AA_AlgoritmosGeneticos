@@ -18,6 +18,8 @@ var percentTop = 0   //variable que tendrá el porcentaje de individuos que se s
 var percentMutate = 0
 var percentCombine = 0
 
+var receiveImg = false
+
 function updateBtnStatus() {
     maxGenerationsValue = parseInt(document.getElementById("maxGenerations").value);
     indivXGenerationValue = parseInt(document.getElementById("unitXGeneration").value);
@@ -31,8 +33,12 @@ function updateBtnStatus() {
 
     total = percentTop + percentMutate + percentCombine;
 
-    startButton.disabled = total !== 100 || maxGenerationsValue === 0 || indivXGenerationValue === 0;
+    startButton.disabled = total !== 100 || maxGenerationsValue === 0 || indivXGenerationValue === 0 || !receiveImg;
     //console.log(total);
+
+    console.log("Total: " + total);
+    console.log("Max Generations: " + maxGenerationsValue);
+    console.log("Individuals per Generation: " + indivXGenerationValue);
 }
 
 sliders.forEach(function(slider, index) {
@@ -53,6 +59,7 @@ inputs.forEach(function(input) {
 document.getElementById('startButton').addEventListener('click', function() {
     document.getElementById('container').style.display = 'none';
     document.getElementById('container2').style.display = 'block';
+    geneticoX();
     //document.getElementById('outputImgObj').style.display = 'block';
 });
 
@@ -207,6 +214,60 @@ function randomColor() {
 }
 
 /**
+ * 
+ */
+
+function geneticoX(){
+      let imgElement = document.getElementById("imageSrc")
+      //let inputElement = document.getElementById("fileInput");
+      // Obtener las dimensiones de la imagen
+      console.log("Se ha cargado esto")
+
+      let mat = cv.imread(imgElement);
+      console.log(mat.ucharPtr(10,10)); // retorna el RGB de la imagen en la posicion 10,10
+      let width = imgElement.naturalWidth;
+      let height = imgElement.naturalHeight;
+      
+      // matriz del tamaño de la imagen
+      let src = new cv.Mat(height, width, cv.CV_8UC3);
+      // Llena la matriz con el color blanco (255, 255, 255)
+      src.setTo(new cv.Scalar(255, 255, 255));
+  
+      // 3 vertices para el triangulo
+  
+      let contador = 0;
+      console.log (indivXGenerationValue);
+  
+      while(contador < indivXGenerationValue){
+  
+        let p1 = generarPuntoAleatorio(width, height);
+        let p2 = generarPuntoAleatorio(width, height);
+        let p3 = generarPuntoAleatorio(width, height);
+  
+        // crea el triangulo
+        let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
+        triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
+        
+        let temp = src.clone();
+        let color = randomColor();
+        console.log(color);
+        console.log(color[0]);
+  
+        // rellena el triangulo de color blanco
+        cv.fillConvexPoly(temp, triangle, color);
+        contador++;
+  
+        
+        let alpha = 0.1 + Math.random() * 0.9; 
+        cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
+        triangle.delete();
+        temp.delete();
+      }
+      // Mostrar la imagen
+      cv.imshow('canvasOutput', src);
+}
+
+/**
  * Función que se encarga de cargar la imagen y realizar el proceso de triangulación
  */
 function cargar(){
@@ -217,53 +278,13 @@ function cargar(){
   }, false);
 
   imgElement.onload = function() {
-    // Obtener las dimensiones de la imagen
-    console.log("Se ha cargado esto")
 
-    let mat = cv.imread(imgElement);
-    console.log(mat.ucharPtr(10,10)); // retorna el RGB de la imagen en la posicion 10,10
-    let width = imgElement.naturalWidth;
-    let height = imgElement.naturalHeight;
-    
-    // matriz del tamaño de la imagen
-    let src = new cv.Mat(height, width, cv.CV_8UC3);
-    // Llena la matriz con el color blanco (255, 255, 255)
-    src.setTo(new cv.Scalar(255, 255, 255));
+    receiveImg = true;
+    updateBtnStatus();
 
-    // 3 vertices para el triangulo
+  }
+};
 
-    let contador = 0;
-
-    while(contador < indivXGenerationValue){
-
-      let p1 = generarPuntoAleatorio(width, height);
-      let p2 = generarPuntoAleatorio(width, height);
-      let p3 = generarPuntoAleatorio(width, height);
-
-      // crea el triangulo
-      let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
-      triangle.data32S.set([p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]);
-      
-      let temp = src.clone();
-      let color = randomColor();
-      console.log(color);
-      console.log(color[0]);
-
-      // rellena el triangulo de color blanco
-      cv.fillConvexPoly(temp, triangle, color);
-      contador++;
-
-      
-      let alpha = 0.1 + Math.random() * 0.9; 
-      cv.addWeighted(src, 1.0 - alpha, temp, alpha, 0.0, src);
-      triangle.delete();
-      temp.delete();
-    }
-
-    // Mostrar la imagen
-    cv.imshow('canvasOutput', src);
-  };
-}
 var Module = {
   // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
   onRuntimeInitialized() {
