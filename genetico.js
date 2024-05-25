@@ -1,8 +1,60 @@
-const CANTIDAD_INDIVIDUOS = 20;
-const GENERACIONES = 200;
-const PORCENTAJE_MUTACIONES = 0.7;
-const PORCENTAJE_COMBINAR = 0.5;
-const PORCENTAJE_INDIVIDUOS_GENERACION = 0.20;
+//const CANTIDAD_INDIVIDUOS = 20;
+//const GENERACIONES = 200;
+//const PORCENTAJE_MUTACIONES = 0.7;
+//const PORCENTAJE_COMBINAR = 0.5;
+//const PORCENTAJE_INDIVIDUOS_GENERACION = 0.20;
+
+var sliders = document.querySelectorAll(".slider");
+var startButton = document.getElementById("startButton");
+var outputs = document.querySelectorAll("span[id^='sliderValue']");
+var inputs = document.querySelectorAll("#maxGenerations, #unitXGeneration");
+
+//Estos valores se asignan al iniciar el programa
+var maxGenerationsValue = 0
+var indivXGenerationValue = 0
+
+//Valores de los slidebars, estos son los datos por defecto 
+var percentTop = 0   //variable que tendrá el porcentaje de individuos que se seleccionarán
+var percentMutate = 0
+var percentCombine = 0
+
+function updateBtnStatus() {
+    maxGenerationsValue = parseInt(document.getElementById("maxGenerations").value);
+    indivXGenerationValue = parseInt(document.getElementById("unitXGeneration").value);
+
+    maxGenerationsValue = isNaN(maxGenerationsValue) ? 0 : maxGenerationsValue;
+    indivXGenerationValue = isNaN(indivXGenerationValue) ? 0 : indivXGenerationValue;
+
+    percentTop = parseInt(document.getElementById("sliderValue1").textContent);
+    percentMutate = parseInt(document.getElementById("sliderValue2").textContent);
+    percentCombine = parseInt(document.getElementById("sliderValue3").textContent);
+
+    total = percentTop + percentMutate + percentCombine;
+
+    startButton.disabled = total !== 100 || maxGenerationsValue === 0 || indivXGenerationValue === 0;
+    //console.log(total);
+}
+
+sliders.forEach(function(slider, index) {
+    slider.addEventListener("input", function() {
+        outputs[index].textContent = this.value; // Actualiza el valor mostrado
+        updateBtnStatus();
+    });
+    outputs[index].textContent = slider.value; // Establece el valor inicial mostrado
+});
+
+// Agrega eventos input a cada uno de los inputs
+inputs.forEach(function(input) {
+    input.addEventListener("input", function() {
+        updateBtnStatus(); // Llama a la función para actualizar el estado del botón
+    });
+});
+
+document.getElementById('startButton').addEventListener('click', function() {
+    document.getElementById('container').style.display = 'none';
+    document.getElementById('container2').style.display = 'block';
+    //document.getElementById('outputImgObj').style.display = 'block';
+});
 
 
 class Triangulo{
@@ -63,7 +115,7 @@ class Individuo {
   mutar(){
     for (let triangulo of this.triangulos) {
       // Si se cumple la probabilidad de mutación, mutar el color del triángulo
-      if (Math.random() < PORCENTAJE_MUTACIONES) {
+      if (Math.random() < percentMutate) {
         this.#mutarColor(triangulo); // Llamar al método privado para mutar el color
       }
     }
@@ -96,7 +148,7 @@ class Poblacion {
   }
 
   seleccion(){
-    for(let i = 0; i < CANTIDAD_INDIVIDUOS; i++){
+    for(let i = 0; i < indivXGenerationValue; i++){
       let individuo = new Individuo();
     }
 
@@ -171,7 +223,7 @@ function cargar(){
 
     let contador = 0;
 
-    while(contador < CANTIDAD_INDIVIDUOS){
+    while(contador < indivXGenerationValue){
 
       let p1 = generarPuntoAleatorio(width, height);
       let p2 = generarPuntoAleatorio(width, height);
@@ -211,7 +263,7 @@ var Module = {
 
 function genetico(){
   let generaciones = 0;
-  while (generaciones < GENERACIONES){
+  while (generaciones < maxGenerationsValue){
     generaciones++;
     seleccion();
   }
