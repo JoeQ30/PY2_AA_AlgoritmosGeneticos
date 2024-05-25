@@ -174,7 +174,9 @@ function cargar(){
     let height = imgElement.naturalHeight;
     
     // matriz del tamaño de la imagen
-    let src = new cv.Mat.zeros(height, width, cv.CV_8UC3);
+    let src = new cv.Mat(height, width, cv.CV_8UC3);
+    // Llena la matriz con el color blanco (255, 255, 255)
+    src.setTo(new cv.Scalar(255, 255, 255));
 
     // 3 vertices para el triangulo
 
