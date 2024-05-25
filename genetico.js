@@ -59,15 +59,32 @@ class Individuo {
     }
 
   }
-  fitness(){
-
+  fitness(imagen){
   }
   mutar(){
-
+    for (let triangulo of this.triangulos) {
+      // Si se cumple la probabilidad de mutación, mutar el color del triángulo
+      if (Math.random() < PORCENTAJE_MUTACIONES) {
+        this.#mutarColor(triangulo); // Llamar al método privado para mutar el color
+      }
+    }
   }
+
+  #mutarColor(triangulo) { // Método privado para mutar el color de un triángulo
+    // Elegir un canal de color al azar
+    let canal = Math.floor(Math.random() * 3);
+
+    // Calcular una cantidad de cambio al azar entre -200 y 200
+    let cambio = Math.floor(Math.random() * 201) - 100;
+
+    // Aplicar el cambio al canal de color, asegurándose de que el nuevo valor esté entre 0 y 255
+    triangulo.color[canal] = Math.min(Math.max(triangulo.color[canal] + cambio, 0), 255);
+  }
+
   combinar(individuo){
 
   }
+
 
 
 }
@@ -126,7 +143,7 @@ function randomColor() {
   let r = Math.floor(Math.random() * 256);
   let g = Math.floor(Math.random() * 256);
   let b = Math.floor(Math.random() * 256);
-  return new cv.Scalar(r, g, b, 255);
+  return new cv.Scalar(r, g, b);
 }
 
 /**
@@ -167,6 +184,8 @@ function cargar(){
       
       let temp = src.clone();
       let color = randomColor();
+      console.log(color);
+      console.log(color[0]);
 
       // rellena el triangulo de color blanco
       cv.fillConvexPoly(temp, triangle, color);
