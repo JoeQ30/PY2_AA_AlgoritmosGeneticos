@@ -92,7 +92,7 @@ class Individuo {
   constructor(){
     this.CANTIDAD_TRIANGULOS = 4;
     this.triangulos = [];
-    let fitness;
+    this.fitness = 0;
   }
   generarTriangulos(){
     let contador = 0;
@@ -165,10 +165,10 @@ class Individuo {
 
 class Poblacion {
 
-  constructor(cantidad_individuos){
+  constructor(cantidad_individuos, imagenObjetivo){
     this.cantidad_individuos = cantidad_individuos;
     this.individuos = [];
-
+    this.imagenObjetivo = imagenObjetivo;
 
   }
 
@@ -178,6 +178,13 @@ class Poblacion {
       let individuo = new Individuo();
       individuo.fitness();
       this.individuos.push(individuo);
+    }
+  
+  }
+  calcularFitness(){
+    for(let individuo of this.individuos){
+      individuo.fitness();
+      this.individuos.sort((a, b) => a.fitness - b.fitness);
     }
   
   }
@@ -248,7 +255,7 @@ function geneticoX(){
   
       let contador = 0;
       console.log (indivXGenerationValue);
-  
+      let poblacion = new Poblacion(indivXGenerationValue, mat);
       while(contador < indivXGenerationValue){
   
         let p1 = generarPuntoAleatorio(width, height);
