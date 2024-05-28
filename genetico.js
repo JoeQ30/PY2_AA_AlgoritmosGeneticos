@@ -60,10 +60,11 @@ inputs.forEach(function(input) {
 });
 
 document.getElementById('startButton').addEventListener('click', function() {
+  initGeneticArt();
+
     document.getElementById('container').style.visibility = 'hidden';
     document.getElementById('container2').style.visibility = 'visible';
     console.log("Presionado el boton start...");
-    initGeneticArt();
     //document.getElementById('outputImgObj').style.display = 'block';
 });
 
@@ -80,21 +81,24 @@ class Triangulo{
     let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
     triangle.data32S.set([this.p1.x, this.p1.y, this.p2.x, this.p2.y, this.p3.x, this.p3.y]);
 
+    let temp = src.clone();
 
     // rellena el triangulo de color
-    cv.fillConvexPoly(src, triangle, this.color);
+    cv.fillConvexPoly(temp, triangle, this.color);
 
-    cv.addWeighted(src, 1.0 - this.alpha, src, this.alpha, 0.0, src);
+    cv.addWeighted(src, 1.0 - this.alpha, temp, this.alpha, 0.0, src);
     triangle.delete();
+    temp.delete();
   }
 
 }
 
 class Individuo {
-  constructor(){
+  constructor(imagenIndividuo){
     this.CANTIDAD_TRIANGULOS = 4;
     this.triangulos = [];
     this.fitness = 0;
+    this.imagenIndividuo = imagenIndividuo;
   }
   generarTriangulos(width, height){
     let contador = 0;
@@ -105,9 +109,11 @@ class Individuo {
       let p3 = generarPuntoAleatorio(width, height);
       let color = randomColor();
       let alpha = 0.1 + Math.random() * 0.9; 
+      alpha = 1;
       this.triangulos.push(new Triangulo(p1, p2, p3, color, alpha));
       contador++;
     }
+    console.log(this.triangulos);
 
   }
   /**
@@ -129,11 +135,14 @@ class Individuo {
     }
   }
 
+
   dibujarIndividuo(src){
     for(let triangule of this.triangulos){
       console.log("Dibujando triangulo... xdxd");
       triangule.dibujar(src);
+      console.log("ha terminado");
     }
+    console.log("hay estos triangulos: "+this.triangulos.length);
   }
 
   mutar(){
@@ -144,8 +153,8 @@ class Individuo {
       console.log("Se muta el color...");
       this.#mutarColor();
     }else{
-      console.log("Se muta el agregando o quitando...");
-      this.#mutarAddOrRem();
+      //console.log("Se muta el agregando o quitando...");
+      //this.#mutarAddOrRem();
     }
   }
 
@@ -197,14 +206,6 @@ class Poblacion {
 
   }
 
-  generaciones(imagenObjetivo){
-    nueva_poblacion = [];
-    for(let i = 0; i < this.cantidad_individuos; i++){
-      let individuo = new Individuo();
-      this.individuos.push(individuo);
-    }
-  
-  }
 
   calcularFitness(imagenObjetivo){
     for(let individuo of this.individuos){
@@ -213,12 +214,6 @@ class Poblacion {
     }
   }
 
-  seleccion(){
-    for(let i = 0; i < indivXGenerationValue; i++){
-      let individuo = new Individuo();
-    }
-
-  }
   
   
   combinar(individuo1, individuo2){
@@ -272,7 +267,7 @@ function randomColor() {
   let r = Math.floor(Math.random() * 256);
   let g = Math.floor(Math.random() * 256);
   let b = Math.floor(Math.random() * 256);
-  return new cv.Scalar(r, g, b);
+  return new cv.Scalar(r, g, b, 255);
 }
 
 /**
@@ -286,8 +281,11 @@ function initPoblacion(imagenObjetivo){
   console.log("---> 3...");
   while (contador < indivXGenerationValue){
     console.log(contador);
-    let individuo = new Individuo();
-    individuo.generarTriangulos();
+    let src = new cv.Mat(height, width, cv.CV_8UC4);
+  // Llena la matriz con el color blanco (255, 255, 255)
+    src.setTo(new cv.Scalar(255,255,255, 255));
+    let individuo = new Individuo(src);
+    individuo.generarTriangulos(width, height);
     
     poblacion.individuos.push(individuo);
     
@@ -307,6 +305,7 @@ function initGeneticArt(){
   let contador1 = 0;
   let imgElement = document.getElementById("imageSrc");
   let mat = cv.imread(imgElement);
+  console.log(mat.ucharPtr(12,3));
   width = imgElement.naturalWidth;
   height = imgElement.naturalHeight;
   
@@ -316,7 +315,7 @@ function initGeneticArt(){
   // matriz del tamaño de la imagen
   let src = new cv.Mat(height, width, cv.CV_8UC4);
   // Llena la matriz con el color blanco (255, 255, 255)
-  src.setTo(new cv.Scalar(255, 255, 255, 255));
+  src.setTo(new cv.Scalar(255,255,255, 255));
   console.log("color: " + src.ucharPtr(12,3));
   console.log("---> 1...");
   // La primera población será completamente aleatoria, es un punto de inicio
@@ -366,12 +365,6 @@ function initGeneticArt(){
       let indice = Math.floor(Math.random() * cantidadSeleccionados);
       let individuo = new Individuo();
       individuo.triangulos = thisPoblacion.individuos[indice].triangulos;
-      console.log(typeof(individuo));
-      let nuevoIndividuo = individuo.mutar();
-
-      
-      
-
       individuo.mutar();
      
       thisPoblacion.individuos.push(individuo);
@@ -400,10 +393,12 @@ function initGeneticArt(){
 
     contador1++;
   }
+  console.log("hay estos individuos en poblacionPadre: "+poblacionPadre.individuos.length);
   let auxiliar = 0;
   for (individuo of poblacionPadre.individuos){ {
 
     individuo.dibujarIndividuo(src);
+    console.log(individuo);
     console.log("Dibujando individuo...  " + auxiliar);
     auxiliar++;
   }}
