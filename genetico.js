@@ -123,12 +123,23 @@ class Individuo {
   calcThisfitness(imagen){
     for(let i = 0; i < width; i++){
       for(let j = 0; j < height; j++){
-        let pixel = imagen.ucharPtr(i, j);
+        let pixelObjetivo = imagen.ucharPtr(i, j);
+        let pixelIndividuo = this.imagenIndividuo.ucharPtr(i, j);
+
+        let distancia = Math.sqrt(
+          Math.pow(pixelObjetivo[0] - pixelIndividuo[0], 2) +
+          Math.pow(pixelObjetivo[1] - pixelIndividuo[1], 2) +
+          Math.pow(pixelObjetivo[2] - pixelIndividuo[2], 2)
+      );
+
+      this.fitness += distancia;
+        /*
         for(let triangulo of this.triangulos){
           let color = triangulo.color;
           let distancia = Math.sqrt(Math.pow(pixel[0] - color[0], 2) + Math.pow(pixel[1] - color[1], 2) + Math.pow(pixel[2] - color[2], 2));
           this.fitness += distancia;
         }
+        */
       }
 
 
