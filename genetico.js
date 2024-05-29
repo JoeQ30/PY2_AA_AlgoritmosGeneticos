@@ -158,7 +158,7 @@ class Individuo {
   // Llena la matriz con el color blanco (255, 255, 255)
     src.setTo(new cv.Scalar(255,255,255, 255));
     this.imagenIndividuo = src;
-    this.dibujarIndividuo(src);
+    this.dibujarIndividuo(this.imagenIndividuo);
     }
   dibujarIndividuo(src){
     for(let triangule of this.triangulos){
@@ -175,8 +175,8 @@ class Individuo {
       console.log("Se muta el color...");
       this.#mutarColor();
     }else{
-      //console.log("Se muta el agregando o quitando...");
-      //this.#mutarAddOrRem();
+      console.log("Se muta el agregando o quitando...");
+      this.#mutarAddOrRem();
     }
   }
 
@@ -239,6 +239,7 @@ class Poblacion {
 
   calcularFitness(imagenObjetivo){
     for(let individuo of this.individuos){
+      individuo.initiateImagenIndividuo();
       individuo.calcThisfitness(imagenObjetivo);
     }
     this.individuos.sort((a, b) => a.fitness - b.fitness);
@@ -321,12 +322,6 @@ function initPoblacion(imagenObjetivo){
     contador++; 
   }
   poblacion.calcularFitness(imagenObjetivo);
-  console.log("Primera generacion creada...")
-  let listaFitness = [];
-    for(let individuo of poblacion.individuos){
-      listaFitness.push(individuo.fitness);
-    }
-  console.log(listaFitness);
   return poblacion;
 }
 
@@ -354,11 +349,8 @@ function initGeneticArt(){
   console.log("color: " + src.ucharPtr(12,3));
   // La primera población será completamente aleatoria, es un punto de inicio
   let poblacionPadre = initPoblacion(mat);
-  poblacionPadre.calcularFitness(mat);
 
-  poblacionPadre.individuos[0].dibujarIndividuo(src);
-  cv.imshow('canvasOutput', src);
-
+  //poblacionPadre.individuos[0].dibujarIndividuo(src);
 
   while (contador1 < maxGenerationsValue){
     console.log("Generación número: " + contador1);
@@ -426,12 +418,6 @@ function initGeneticArt(){
     //let mejorIndividuo = thisPoblacion.individuos[0];
    // mejorIndividuo.dibujarIndividuo(src);
     
-    let listaFitness = [];
-    for(let individuo of thisPoblacion.individuos){
-      listaFitness.push(individuo.fitness);
-    }
-    console.log("lista de fitness: "+listaFitness);
-
     poblacionPadre = thisPoblacion;
 
     contador1++;
