@@ -81,27 +81,24 @@ class Triangulo{
     let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
     triangle.data32S.set([this.p1.x, this.p1.y, this.p2.x, this.p2.y, this.p3.x, this.p3.y]);
 
-    let temp = src.clone();
-
     // rellena el triangulo de color
-    cv.fillConvexPoly(temp, triangle, this.color);
+    cv.fillConvexPoly(src, triangle, this.color);
 
-    cv.addWeighted(src, 1.0 - this.alpha, temp, this.alpha, 0.0, src);
+    cv.addWeighted(src, 1.0 - this.alpha, src, this.alpha, 0.0, src);
     triangle.delete();
-    temp.delete();
-
-    return temp;
+   // temp.delete();
   }
 
 }
 
 class Individuo {
-  constructor(imagenIndividuo){
+  constructor(){
     this.CANTIDAD_TRIANGULOS = 4;
     this.triangulos = [];
-    this.fitness = 0;
-    this.imagenIndividuo = imagenIndividuo;
+    this.fitness = 1;
+    this.imagenIndividuo = null;
   }
+
   generarTriangulos(width, height){
     let contador = 0;
     while(contador < this.CANTIDAD_TRIANGULOS){
@@ -123,8 +120,8 @@ class Individuo {
    * @param {image} imagen original  
    */
   calcThisfitness(imagen){
-    for(let i = 0; i < width; i++){
-      for(let j = 0; j < height; j++){
+    for(let i = 0; i < height ; i++){
+      for(let j = 0; j < width; j++){
         let pixelObjetivo = imagen.ucharPtr(i, j);
         let pixelIndividuo = this.imagenIndividuo.ucharPtr(i, j);
 
@@ -135,25 +132,22 @@ class Individuo {
       );
 
       this.fitness += distancia;
-        /*
-        for(let triangulo of this.triangulos){
-          let color = triangulo.color;
-          let distancia = Math.sqrt(Math.pow(pixel[0] - color[0], 2) + Math.pow(pixel[1] - color[1], 2) + Math.pow(pixel[2] - color[2], 2));
-          this.fitness += distancia;
-        }
-        */
       }
 
 
     }
   }
 
-
+  initiateImagenIndividuo(){
+    let src = new cv.Mat(height, width, cv.CV_8UC4);
+  // Llena la matriz con el color blanco (255, 255, 255)
+    src.setTo(new cv.Scalar(255,255,255, 255));
+    this.imagenIndividuo = src;
+    this.dibujarIndividuo(src);
+    }
   dibujarIndividuo(src){
     for(let triangule of this.triangulos){
-      console.log("Dibujando triangulo... xdxd");
       triangule.dibujar(src);
-      console.log("ha terminado");
     }
     console.log("hay estos triangulos: "+this.triangulos.length);
   }
@@ -239,10 +233,12 @@ class Poblacion {
     // Crea los nuevos individuos
     let nuevoIndividuo1 = new Individuo();
     nuevoIndividuo1.triangulos = triangulos1;
+    nuevoIndividuo1.initiateImagenIndividuo();
     nuevoIndividuo1.calcThisfitness(this.imagenObjetivo);
 
     let nuevoIndividuo2 = new Individuo();
     nuevoIndividuo2.triangulos = triangulos2;
+    nuevoIndividuo2.initiateImagenIndividuo();
     nuevoIndividuo2.calcThisfitness(this.imagenObjetivo);
     if (nuevoIndividuo1.fitness < nuevoIndividuo2.fitness) {
       return nuevoIndividuo1;
@@ -293,12 +289,9 @@ function initPoblacion(imagenObjetivo){
   let poblacion = new Poblacion(indivXGenerationValue, imagenObjetivo);
   console.log("---> 3...");
   while (contador < indivXGenerationValue){
-    console.log(contador);
-    let src = new cv.Mat(height, width, cv.CV_8UC4);
-  // Llena la matriz con el color blanco (255, 255, 255)
-    src.setTo(new cv.Scalar(255,255,255, 255));
-    let individuo = new Individuo(src);
+    let individuo = new Individuo();
     individuo.generarTriangulos(width, height);
+    individuo.initiateImagenIndividuo();
     
     poblacion.individuos.push(individuo);
     
@@ -378,6 +371,7 @@ function initGeneticArt(){
       let indice = Math.floor(Math.random() * cantidadSeleccionados);
       let individuo = new Individuo();
       individuo.triangulos = thisPoblacion.individuos[indice].triangulos;
+      individuo.initiateImagenIndividuo();
       individuo.mutar();
      
       thisPoblacion.individuos.push(individuo);
