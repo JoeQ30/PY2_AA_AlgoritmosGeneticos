@@ -217,8 +217,8 @@ class Poblacion {
   calcularFitness(imagenObjetivo){
     for(let individuo of this.individuos){
       individuo.calcThisfitness(imagenObjetivo);
-      this.individuos.sort((a, b) => a.fitness - b.fitness);
     }
+    this.individuos.sort((a, b) => a.fitness - b.fitness);
   }
 
   
@@ -299,6 +299,11 @@ function initPoblacion(imagenObjetivo){
   }
   poblacion.calcularFitness(imagenObjetivo);
   console.log("Primera generacion creada...")
+  let listaFitness = [];
+    for(let individuo of poblacion.individuos){
+      listaFitness.push(individuo.fitness);
+    }
+  console.log(listaFitness);
   return poblacion;
 }
 
