@@ -89,6 +89,8 @@ class Triangulo{
     cv.addWeighted(src, 1.0 - this.alpha, temp, this.alpha, 0.0, src);
     triangle.delete();
     temp.delete();
+
+    return temp;
   }
 
 }
