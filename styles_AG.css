@@ -25,7 +25,7 @@
     align-items: center; /* Centra los elementos horizontalmente */
     columns: 1;
     width: auto; /* Ancho del div que tiene sombra*/
-    max-width: 700px;
+    max-width: 850px;
     height: auto; /* Altura del div que tiene sombra*/
     background-color: white; /* Color de fondo del div */
     border-radius: 10px; /* Radio de la esquina del div */

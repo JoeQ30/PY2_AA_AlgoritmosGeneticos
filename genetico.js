@@ -1,11 +1,3 @@
-
-
-//const CANTIDAD_INDIVIDUOS = 20;
-//const GENERACIONES = 200;
-//const PORCENTAJE_MUTACIONES = 0.7;
-//const PORCENTAJE_COMBINAR = 0.5;
-//const PORCENTAJE_INDIVIDUOS_GENERACION = 0.20;
-
 var sliders = document.querySelectorAll(".slider");
 var startButton = document.getElementById("startButton");
 var outputs = document.querySelectorAll("span[id^='sliderValue']");
@@ -17,17 +9,18 @@ var indivXGenerationValue = 0
 
 //Valores de los slidebars, estos son los datos por defecto 
 var percentTop = 0   //variable que tendrá el porcentaje de individuos que se seleccionarán
-var percentMutate = 0
-var percentCombine = 0
+var percentMutate = 0 //variable que tendrá el porcentaje de individuos que se mutarán
+var percentCombine = 0  //variable que tendrá el porcentaje de individuos que se combinarán
 
-var receiveImg = false
+var receiveImg = false  //Flag para validar que se haya recibido una imagen
 
+//Variables globales que manejan las dimensiones de las imagenes
 var width = 0;
 var height = 0;
 
-var asignId = 0;
+var asignId = 0;  //Variable que maneja los ids de los Individuos
 
-
+//Inicialización del OpenCV
 var Module = {
   // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
   onRuntimeInitialized() {
@@ -37,7 +30,10 @@ var Module = {
 };
 
 
-
+/**
+ * Función que actualiza el estado del botón de inicio
+ * Validación para proceder con el algoritmo genetico
+ */
 function updateBtnStatus() {
     maxGenerationsValue = parseInt(document.getElementById("maxGenerations").value);
     indivXGenerationValue = parseInt(document.getElementById("unitXGeneration").value);
@@ -51,14 +47,14 @@ function updateBtnStatus() {
 
     total = percentTop + percentMutate + percentCombine;
 
-    startButton.disabled = total !== 100 || maxGenerationsValue === 0 || indivXGenerationValue === 0 || !receiveImg;
-    //console.log(total);
+    // Validaciones del botón de inicio, generaciones, individuos por generación 
+    // y que se haya recibido una imagen
+    startButton.disabled = total !== 100 || maxGenerationsValue === 0 || 
+    indivXGenerationValue === 0 || !receiveImg;
 
-    //console.log("Total: " + total);
-    //console.log("Max Generations: " + maxGenerationsValue);
-    //console.log("Individuals per Generation: " + indivXGenerationValue);
 }
 
+//------------------ Event Listeners ----------------------
 sliders.forEach(function(slider, index) {
     slider.addEventListener("input", function() {
         outputs[index].textContent = this.value; // Actualiza el valor mostrado
@@ -79,8 +75,13 @@ document.getElementById('startButton').addEventListener('click', function() {
     initDataChart();
     changeScene('idScene2');
     setTimeout(initGeneticArt, 0);
+    document.getElementById("divTiempos").style.display = "block";
 });
+//------------------ Event Listeners ----------------------
 
+/**
+ * Función que actualiza la pantalla por dibujo
+ */
 function changeScene(sceneId) {
   // Ocultar todas las escenas
   let scenes = document.querySelectorAll('.scene');
@@ -93,9 +94,13 @@ function changeScene(sceneId) {
   if (activeScene) {
     activeScene.className = 'scene active'; // Cambiar clase a 'scene active'
   }
+
+  document.getElementById("divTiempos").style.display = "none";
 }
 
-
+/**
+ * Clase que representa un triángulo
+ */
 class Triangulo{
   constructor(p1, p2, p3, color, alpha) {
     this.p1 = p1;
@@ -104,24 +109,35 @@ class Triangulo{
     this.color = color;
     this.alpha = alpha;
   }
+
   dibujar(src) {
     let triangle = new cv.Mat(1, 3, cv.CV_32SC2);
-    triangle.data32S.set([this.p1.x, this.p1.y, this.p2.x, this.p2.y, this.p3.x, this.p3.y]);
+    triangle.data32S.set([this.p1.x, 
+                          this.p1.y, 
+                          this.p2.x, 
+                          this.p2.y, 
+                          this.p3.x, 
+                          this.p3.y]);
 
     // rellena el triangulo de color
     cv.fillConvexPoly(src, triangle, this.color);
 
     cv.addWeighted(src, 1.0 - this.alpha, src, this.alpha, 0.0, src);
     triangle.delete();
-   // temp.delete();
   }
 
   clone() {
-    return new Triangulo(this.p1, this.p2, this.p3, this.color, this.alpha);
+    return new Triangulo(this.p1, 
+                        this.p2, 
+                        this.p3, 
+                        this.color, 
+                        this.alpha);
   }
 
 }
-
+/**
+ * Clase que representa un individuo que contiene una cantidad de triangulos
+ */
 class Individuo {
   constructor(){
     this.CANTIDAD_TRIANGULOS = 25;
@@ -131,7 +147,9 @@ class Individuo {
     this.id = asignId;
     asignId++;
   }
-
+  /**
+   * Metodo que genera triangulos de forma aleatoria
+   */
   generarTriangulos(width, height){
     let contador = 0;
     while(contador < this.CANTIDAD_TRIANGULOS){
@@ -183,7 +201,6 @@ class Individuo {
     for(let triangule of this.triangulos){
       triangule.dibujar(src);
     }
-    //console.log("hay estos triangulos: "+this.triangulos.length);
   }
 
   mutar(){
@@ -192,15 +209,14 @@ class Individuo {
     
     // Probabilidad de 50% que se aplique una mutacion u otra
     if (randDesicion <= 5){
-      console.log("Se muta el color de una figura...");
       this.#mutarColor();
     }else{
-      console.log("Se muta agregando o quitando una figura...");
       this.#mutarAddOrRem();
     }
   }
 
   #mutarColor(){
+    console.log("Se muta el color de las figuras...");
     for (let triangulo of this.triangulos) {
       let randNumMutate = Math.random();
       let randNumDecision = Math.floor(randNumMutate * 100) + 1;
@@ -229,19 +245,18 @@ class Individuo {
     }
     for (let i = 0; i < cantTriangulosMutar; i++){
       let randNum = Math.round(Math.random());
-      //console.log("Número aleatorio (mutar3): "+randNum);
       if (randNum === 0){
-        //console.log("Se quitará un triangulo de forma aleatoria");
         let indice = Math.floor(Math.random() * this.triangulos.length);
         this.triangulos.splice(indice, 1);
+        console.log("Se quita una figura...");
       }else {
-        //console.log("Se agregará un triángulo de forma aleeatoria");
         let p1 = generarPuntoAleatorio(width, height);
         let p2 = generarPuntoAleatorio(width, height);
         let p3 = generarPuntoAleatorio(width, height);
         let color = randomColor();
         let alpha = 0.1 + Math.random() * 0.9;
         this.triangulos.push(new Triangulo(p1, p2, p3, color, alpha));
+        console.log("Se agrega una figura...");
       }
     }
   }
@@ -262,6 +277,9 @@ class Individuo {
   }
 }
 
+/**
+ * Clase que representa una población de individuos
+ */
 class Poblacion {
 
   constructor(cantidad_individuos, imagenObjetivo){
@@ -273,12 +291,11 @@ class Poblacion {
 
 
   calcularFitness(){
-    console.log("Entra a Calcular fitness");
+    console.log("Calculando fitness de la población...");
     for(let individuo of this.individuos){
       individuo.initiateImagenIndividuo();
       individuo.calcThisfitness(this.imagenObjetivo);
     }
-    console.log("Ordena lista de individuos");
     this.individuos.sort((a, b) => a.fitness - b.fitness);
   }
 
@@ -288,8 +305,15 @@ class Poblacion {
     let puntoCruce = Math.floor(Math.random() * individuo1.triangulos.length);
     
     // Crea los nuevos arreglos de triángulos
-    let triangulos1 = individuo1.triangulos.slice(0, puntoCruce).concat(individuo2.triangulos.slice(puntoCruce));
-    let triangulos2 = individuo2.triangulos.slice(0, puntoCruce).concat(individuo1.triangulos.slice(puntoCruce));
+    let triangulosOriginales1 = individuo1.triangulos.slice(0, puntoCruce).
+    concat(individuo2.triangulos.slice(puntoCruce));
+    
+    let triangulosOriginales2 = individuo2.triangulos.slice(0, puntoCruce).
+    concat(individuo1.triangulos.slice(puntoCruce));
+
+    // Clona los arreglos de triángulos
+    let triangulos1 = triangulosOriginales1.map(triangulo => triangulo.clone());
+    let triangulos2 = triangulosOriginales2.map(triangulo => triangulo.clone());
 
     // Crea los nuevos individuos
     let nuevoIndividuo1 = new Individuo();
@@ -301,11 +325,10 @@ class Poblacion {
     nuevoIndividuo2.triangulos = triangulos2;
     nuevoIndividuo2.initiateImagenIndividuo();
     nuevoIndividuo2.calcThisfitness(this.imagenObjetivo);
-    console.log("Combinacion realizada...");
-    if (nuevoIndividuo1.fitness < nuevoIndividuo2.fitness) {
+    if (nuevoIndividuo1 > nuevoIndividuo2){
       return nuevoIndividuo1;
     } else {
-        return nuevoIndividuo2;
+      return nuevoIndividuo2;
     }
   }
 
@@ -314,7 +337,6 @@ class Poblacion {
       individuo.imprimirIndividuo();
     }
   }
-
 }
 
 
@@ -352,7 +374,7 @@ function randomColor() {
 function initPoblacion(imagenObjetivo){
   let contador = 0;
   let poblacion = new Poblacion(indivXGenerationValue, imagenObjetivo);
-  console.log("---> 3...");
+  console.log("Inicializando primera población de forma aleatoria...");
   while (contador < indivXGenerationValue){
     let individuo = new Individuo();
     individuo.generarTriangulos(width, height);
@@ -366,8 +388,15 @@ function initPoblacion(imagenObjetivo){
   return poblacion;
 }
 
+/**
+ * Funcion que revisa si un arreglo contiene otro arreglo
+ * @param {array} arr primero arreglo
+ * @param {array} subArr segundo arreglo
+ */
 function arrayContainsArray(arr, subArr) {
-  return arr.some(a => a.length === subArr.length && a.every((v, i) => v === subArr[i]));
+  return arr.some(a => a.length === 
+    subArr.length && a.every((v, i) => v === 
+    subArr[i]));
 }
 
 
@@ -381,18 +410,25 @@ function fitnessRepetido(fitness, poblacion) {
 
 
 
-/**
- * Funcion para iniciar el algoritmo Genetico
- */
 
+/**
+ * Funcion que inicia el algoritmo genético
+ */
 function initGeneticArt() {
-  console.log("Se inicia el algoritmo genético...");
   const inicio = performance.now();
+
+  console.log("Se inicia el algoritmo genético...");
+  
   let lblBestFitness = document.getElementById("ValueFitness");
-  let contador1 = 0;
+  
+  let contador = 0;
+  let listaTiempos = [];
+  let listaFitnessMejores = [];
+  let sumaFitnessPromedio;
+
   let imgElement = document.getElementById("imageSrc");
   let mat = cv.imread(imgElement);
-  console.log(mat.ucharPtr(12, 3));
+  
   width = imgElement.naturalWidth;
   height = imgElement.naturalHeight;
 
@@ -400,43 +436,59 @@ function initGeneticArt() {
   let src = new cv.Mat(height, width, cv.CV_8UC4);
   src.setTo(new cv.Scalar(255, 255, 255, 255));
   
-  console.log("color: " + src.ucharPtr(12, 3));
-
+  console.log("Generación número: " + (contador));
+  
   // Inicializar población padre
   let poblacionPadre = initPoblacion(mat);
   poblacionPadre.calcularFitness(mat);
-  //poblacionPadre.individuos[0].dibujarIndividuo();
+  let mejorIndividuo = poblacionPadre.individuos[0];
+  
+  src.setTo(new cv.Scalar(255, 255, 255, 255));
+  mejorIndividuo.dibujarIndividuo(src);
   cv.imshow('canvasOutput', src);
-  //setTimeout(iterar, 0);
-  let listaFitnessMejores = [];
-  let sumaFitnessPromedio;
 
+  lblBestFitness.textContent = mejorIndividuo.fitness;
+  
+  sumaFitnessPromedio = poblacionPadre.individuos.reduce((acc, individuo) => acc 
+  + individuo.fitness, 0) / poblacionPadre.individuos.length;
+  
+  addDataToChart(contador, sumaFitnessPromedio, mejorIndividuo.fitness);
+
+  /**
+   * Funcion interna que se encarga de iterar sobre las generaciones
+   */
   function iterar() {
-    console.log("Lista mejores fitness: "+ listaFitnessMejores);
-    if (contador1 >= maxGenerationsValue) {
+    console.log("Generación número: " + (contador+1));
+    
+    const tiempoInicial = performance.now();
+    if (contador >= maxGenerationsValue) {
       const fin = performance.now(); // Tiempo final
-      //ataChart(listaFitnessMejores);
+      document.getElementById("timerTotal").innerHTML = formatTime(fin - inicio);
+      const promedioTiempos = listaTiempos.reduce((total, numero) => 
+      total + numero, 0) / listaTiempos.length;
+      document.getElementById("timerPromedio").innerHTML = formatTime(promedioTiempos);
+
       return;
     }
-        console.log("Generación número: " + (contador1+1));
+    
     let thisPoblacion = new Poblacion(indivXGenerationValue, mat);
     let mejoresIndividuos = [];
 
     // Parte seleccionar
     let porcentajeSeleccionados = percentTop * 0.01;
     let cantidadSeleccionados = Math.round(porcentajeSeleccionados * indivXGenerationValue);
+    
+    //Clonamos los mejores individuos de poblacion padre a mejoresIndividuos
+    //Para trabajar con ellos las mutaciones y las combinaciones
     for (let i = 0; i < cantidadSeleccionados; i++) {
       mejoresIndividuos.push(poblacionPadre.individuos[i].clone());
     }
 
-
-    for (let ind in mejoresIndividuos) {
-      console.log("Fitness de los mejores individuos: " + mejoresIndividuos[ind].fitness);
-    } 
-
+    //Clonamos los mejoresIndividuos a la población actual
     for (let i = 0; i < mejoresIndividuos.length; i++) {
       thisPoblacion.individuos.push(mejoresIndividuos[i].clone());
     }
+
     console.log("cantidad de individuos seleccionados: " + cantidadSeleccionados);
 
     // Parte combinar
@@ -444,28 +496,18 @@ function initGeneticArt() {
     let cantidadCombinar = Math.round(porcentajeCombinar * indivXGenerationValue);
     let countCombinaciones = 0;
     
-    let combinacionesRealizadas = [];
-
+    //Se llevan a cabo las combinaciones solicitadas
     while (countCombinaciones < cantidadCombinar) {
       let indice1 = Math.floor(Math.random() * cantidadSeleccionados);
       let indice2 = Math.floor(Math.random() * cantidadSeleccionados);
+      //Valida que no se combine un mismo individuo consigo mismo
       if (indice1 !== indice2){
-        let combinacion1 = [indice1, indice2];
-        let combinacion2 = [indice2, indice1];
-        if (!arrayContainsArray(combinacionesRealizadas, combinacion1)) {
-          combinacionesRealizadas.push(combinacion1);
-          combinacionesRealizadas.push(combinacion2); 
-          let individuo1 = mejoresIndividuos[indice1].clone();
-          let individuo2 = mejoresIndividuos[indice2].clone();
-          if (individuo1.fitness !== individuo2.fitness){
-            let nuevoIndividuo = thisPoblacion.combinar(individuo1, individuo2);
-            let validaFitness = fitnessRepetido(nuevoIndividuo.fitness, thisPoblacion);
-            if (validaFitness){ 
-              thisPoblacion.individuos.push(nuevoIndividuo);
-              countCombinaciones++;
-            }
-          }
-        }
+        let individuo1 = mejoresIndividuos[indice1].clone();
+        let individuo2 = mejoresIndividuos[indice2].clone();
+        let nuevoIndividuo = thisPoblacion.combinar(individuo1, individuo2);
+        thisPoblacion.individuos.push(nuevoIndividuo);
+        console.log("La combinación se llevó a cabo con exito...")
+        countCombinaciones++;
       }
     }
     console.log("cantidad de individuos combinados: " + cantidadCombinar);
@@ -474,74 +516,62 @@ function initGeneticArt() {
     let porcentajeMutar = percentMutate * 0.01;
     let cantidadMutar = Math.round(porcentajeMutar * indivXGenerationValue);
     let countMutaciones = 0;
-    let individuosMutados = [];
+
+    // Se llevan a cabo las mutaciones solicitadas
     while (countMutaciones < cantidadMutar) {
       let indice = Math.floor(Math.random() * cantidadSeleccionados);
-      if (!individuosMutados.includes(indice)) {
-        
-        console.log("Individuos Mutados: " + individuosMutados);
-        let individuo = mejoresIndividuos[indice].clone();
-        individuo.mutar();
-        individuo.calcThisfitness(mat);
-        let validaFitness = fitnessRepetido(individuo.fitness, thisPoblacion);
-        if (validaFitness){
-          thisPoblacion.individuos.push(individuo);
-          individuosMutados.push(indice);
-          countMutaciones++;
-        }
+      let individuo = mejoresIndividuos[indice].clone();
+      individuo.mutar();
+      individuo.calcThisfitness(mat);
+      let validaFitness = fitnessRepetido(individuo.fitness, thisPoblacion);
+      if (validaFitness){
+        thisPoblacion.individuos.push(individuo);
+        countMutaciones++;
       }
     }
     console.log("cantidad de individuos mutados: " + cantidadMutar);
 
     // Calcular fitness
     thisPoblacion.calcularFitness(mat);
-    thisPoblacion.imprimirPoblacion();
-    //console.log("Fitness de la población calculada... ");
-    //let listaFitness = [];
-    //console.log("Se crea lista fitness...");
-    //for (let individuo of thisPoblacion.individuos) {
-    //  listaFitness.push(individuo.fitness);
-    //}
-    //console.log("Fitness de la generación: " + listaFitness);
 
     // Dibujar el mejor individuo de esta generación
     let mejorIndividuo = thisPoblacion.individuos[0];
     src.setTo(new cv.Scalar(255, 255, 255, 255));
     mejorIndividuo.dibujarIndividuo(src);
     cv.imshow('canvasOutput', src);
-    lblBestFitness.textContent = mejorIndividuo.fitness;
-    listaFitnessMejores.push(mejorIndividuo.fitness);
-    sumaFitnessPromedio = poblacionPadre.individuos.reduce((acc, individuo) => acc + individuo.fitness, 0) / poblacionPadre.individuos.length;
 
+    //Mostramos el fitness del mejor individuo de esta generación
+    lblBestFitness.textContent = mejorIndividuo.fitness;
+
+    listaFitnessMejores.push(mejorIndividuo.fitness);
+    sumaFitnessPromedio = thisPoblacion.individuos.reduce((acc, individuo) => acc 
+    + individuo.fitness, 0) / thisPoblacion.individuos.length;
+
+    
     // Asignar nueva población
     poblacionPadre = thisPoblacion;
 
     // Incrementar el contador y programar la siguiente iteración
-    contador1++;
-    //requestAnimationFrame(iterar); // Usar setTimeout para ceder el control al navegador y se actualice el DOM
-    addDataToChart(contador1, sumaFitnessPromedio, mejorIndividuo.fitness);
+    contador++;
+    // Usar setTimeout para ceder el control al navegador y se actualice el DOM
+    addDataToChart(contador, sumaFitnessPromedio, mejorIndividuo.fitness);
+
+    const tiempoFinal = performance.now();
+    listaTiempos.push(tiempoFinal - tiempoInicial);// Iniciar las iteraciones
+
     setTimeout(iterar,0);
   }
-  // Iniciar las iteraciones
-  iterar();
-
-  //console.log("hay estos individuos en poblacionPadre: "+poblacionPadre.individuos.length);
-  //let auxiliar = 0;
-  //for (individuo of poblacionPadre.individuos){ {
-//
-  //  individuo.dibujarIndividuo(src);
-  //  console.log(individuo);
-  //  console.log("Dibujando individuo...  " + auxiliar);
-  //  auxiliar++;
-  //}}
-  //cv.imshow('canvasOutput', src);
+  
+  setTimeout(iterar,0);
+  
+  
 }
 
 
 
 
 /**
- * Función que se encarga de cargar la imagen y realizar el proceso de triangulación
+ * Función que se encarga de cargar la imagen y de mostrarla en el canvas
  */
 function cargar(){
   let imgElement = document.getElementById("imageSrc")
@@ -559,6 +589,9 @@ function cargar(){
 };
 
 let chart;
+/**
+ * Función que inicializa el gráfico de datos
+ */
 function initDataChart() {
   const ctx = document.getElementById('myChart').getContext('2d');
   chart = new Chart(ctx, {
@@ -600,6 +633,12 @@ function initDataChart() {
   });
 }
 
+/**
+ * Función que agrega datos al gráfico
+ * @param {string} label Etiqueta de las generaciones
+ * @param {number} avgData Fitness promedio de la generacion
+ * @param {number} bestData Mejor fitness de la generacion
+ */
 function addDataToChart(label, avgData, bestData ) {
   setTimeout(() => {
     chart.data.labels.push(label); // Agrega la nueva etiqueta
@@ -607,14 +646,32 @@ function addDataToChart(label, avgData, bestData ) {
   if (chart.data.datasets[0]) {
     chart.data.datasets[0].data.push(avgData); // Agrega el nuevo dato promedio
   } else {
-    console.error('Dataset for average data does not exist.');
+    console.error('No hay Datos para el promedio de fitness');
   }
 
   if (chart.data.datasets[1]) {
     chart.data.datasets[1].data.push(bestData); // Agrega el nuevo dato del mejor caso
   } else {
-    console.error('Dataset for best case data does not exist.');
+    console.error('No hay Datos para el mejor fitness');
   }
   chart.update(); // Actualiza el gráfico
   }, 0);
+}
+
+/**
+ * Función que convierte milisegundos a formato de tiempo HH:mm:ss
+ * @param {number} milliseconds Milisegundos a convertir
+ * @returns {string} Tiempo en formato HH:mm:ss
+ */
+function formatTime(milliseconds) {
+  let seconds = Math.floor(milliseconds / 1000);
+  let hours = Math.floor(seconds / 3600);
+  seconds %= 3600;
+  let minutes = Math.floor(seconds / 60);
+  seconds %= 60;
+
+  // Asegura que los valores sean de dos dígitos
+  const pad = num => num.toString().padStart(2, '0');
+
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
