@@ -409,6 +409,7 @@ function initGeneticArt() {
   cv.imshow('canvasOutput', src);
   //setTimeout(iterar, 0);
   let listaFitnessMejores = [];
+  let sumaFitnessPromedio;
 
   function iterar() {
     console.log("Lista mejores fitness: "+ listaFitnessMejores);
@@ -417,8 +418,7 @@ function initGeneticArt() {
       //ataChart(listaFitnessMejores);
       return;
     }
-
-    console.log("Generación número: " + (contador1+1));
+        console.log("Generación número: " + (contador1+1));
     let thisPoblacion = new Poblacion(indivXGenerationValue, mat);
     let mejoresIndividuos = [];
 
@@ -511,13 +511,15 @@ function initGeneticArt() {
     cv.imshow('canvasOutput', src);
     lblBestFitness.textContent = mejorIndividuo.fitness;
     listaFitnessMejores.push(mejorIndividuo.fitness);
+    sumaFitnessPromedio = poblacionPadre.individuos.reduce((acc, individuo) => acc + individuo.fitness, 0) / poblacionPadre.individuos.length;
+
     // Asignar nueva población
     poblacionPadre = thisPoblacion;
 
     // Incrementar el contador y programar la siguiente iteración
     contador1++;
     //requestAnimationFrame(iterar); // Usar setTimeout para ceder el control al navegador y se actualice el DOM
-    addDataToChart(contador1, mejorIndividuo.fitness);
+    addDataToChart(contador1, sumaFitnessPromedio, mejorIndividuo.fitness);
     setTimeout(iterar,0);
   }
   // Iniciar las iteraciones
@@ -564,11 +566,19 @@ function initDataChart() {
     data: {
       labels: [], // Etiquetas iniciales vacías
       datasets: [{
-        label: 'Fitness por Generacion',
+        label: 'Mejor Fitness por Generacion',
         data: [], // Datos iniciales vacíos
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1
+      },{
+        label: 'Fitness promedio por generacion',
+        data: [], // Datos iniciales vacíos
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 6, 10, 1)',
+        borderWidth: 1
+
+
       }]
     },
     options: {
@@ -590,10 +600,21 @@ function initDataChart() {
   });
 }
 
-function addDataToChart(label, data) {
+function addDataToChart(label, avgData, bestData ) {
   setTimeout(() => {
     chart.data.labels.push(label); // Agrega la nueva etiqueta
-    chart.data.datasets[0].data.push(data); // Agrega el nuevo dato
-    chart.update(); // Actualiza el gráfico
+
+  if (chart.data.datasets[0]) {
+    chart.data.datasets[0].data.push(avgData); // Agrega el nuevo dato promedio
+  } else {
+    console.error('Dataset for average data does not exist.');
+  }
+
+  if (chart.data.datasets[1]) {
+    chart.data.datasets[1].data.push(bestData); // Agrega el nuevo dato del mejor caso
+  } else {
+    console.error('Dataset for best case data does not exist.');
+  }
+  chart.update(); // Actualiza el gráfico
   }, 0);
 }
