@@ -1,3 +1,5 @@
+
+
 //const CANTIDAD_INDIVIDUOS = 20;
 //const GENERACIONES = 200;
 //const PORCENTAJE_MUTACIONES = 0.7;
@@ -22,6 +24,19 @@ var receiveImg = false
 
 var width = 0;
 var height = 0;
+
+var asignId = 0;
+
+
+var Module = {
+  // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
+  onRuntimeInitialized() {
+    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
+  }
+
+};
+
+
 
 function updateBtnStatus() {
     maxGenerationsValue = parseInt(document.getElementById("maxGenerations").value);
@@ -61,6 +76,7 @@ inputs.forEach(function(input) {
 
 
 document.getElementById('startButton').addEventListener('click', function() {
+    initDataChart();
     changeScene('idScene2');
     setTimeout(initGeneticArt, 0);
 });
@@ -108,10 +124,12 @@ class Triangulo{
 
 class Individuo {
   constructor(){
-    this.CANTIDAD_TRIANGULOS = 4;
+    this.CANTIDAD_TRIANGULOS = 25;
     this.triangulos = [];
     this.fitness = 1;
     this.imagenIndividuo = null;
+    this.id = asignId;
+    asignId++;
   }
 
   generarTriangulos(width, height){
@@ -135,6 +153,7 @@ class Individuo {
    * @param {image} imagen original  
    */
   calcThisfitness(imagen){
+    this.fitness = 0;
     for(let i = 0; i < height ; i++){
       for(let j = 0; j < width; j++){
         let pixelObjetivo = imagen.ucharPtr(i, j);
@@ -164,26 +183,29 @@ class Individuo {
     for(let triangule of this.triangulos){
       triangule.dibujar(src);
     }
-    console.log("hay estos triangulos: "+this.triangulos.length);
+    //console.log("hay estos triangulos: "+this.triangulos.length);
   }
 
   mutar(){
     let randNumMutate = Math.random();
     let randDesicion = Math.floor(randNumMutate * 10) + 1;
+    
     // Probabilidad de 50% que se aplique una mutacion u otra
     if (randDesicion <= 5){
-      console.log("Se muta el color...");
+      console.log("Se muta el color de una figura...");
       this.#mutarColor();
     }else{
-      console.log("Se muta el agregando o quitando...");
+      console.log("Se muta agregando o quitando una figura...");
       this.#mutarAddOrRem();
     }
   }
 
   #mutarColor(){
     for (let triangulo of this.triangulos) {
+      let randNumMutate = Math.random();
+      let randNumDecision = Math.floor(randNumMutate * 100) + 1;
       // Si se cumple la probabilidad de mutación, mutar el color del triángulo
-      if (Math.random() < percentMutate) {
+      if (randNumDecision < percentMutate) {
         this.#mutarColorAux(triangulo); // Llamar al método privado para mutar el color
       }
     }
@@ -201,21 +223,31 @@ class Individuo {
   }
 
   #mutarAddOrRem(){
-    let randNum = Math.round(Math.random());
-    console.log("Número aleatorio (mutar3): "+randNum);
-    if (randNum === 0){
-      console.log("Se quitará un triangulo de forma aleatoria");
-      let indice = Math.floor(Math.random() * this.triangulos.length);
-      this.triangulos.splice(indice, 1);
-    }else {
-      console.log("Se agregará un triángulo de forma aleeatoria");
-      let p1 = generarPuntoAleatorio(width, height);
-      let p2 = generarPuntoAleatorio(width, height);
-      let p3 = generarPuntoAleatorio(width, height);
-      let color = randomColor();
-      let alpha = 0.1 + Math.random() * 0.9;
-      this.triangulos.push(new Triangulo(p1, p2, p3, color, alpha));
+    let cantTriangulosMutar = Math.floor(Math.random() * this.CANTIDAD_TRIANGULOS) - 1;
+    if (cantTriangulosMutar < 0){
+      cantTriangulosMutar = 1;
     }
+    for (let i = 0; i < cantTriangulosMutar; i++){
+      let randNum = Math.round(Math.random());
+      //console.log("Número aleatorio (mutar3): "+randNum);
+      if (randNum === 0){
+        //console.log("Se quitará un triangulo de forma aleatoria");
+        let indice = Math.floor(Math.random() * this.triangulos.length);
+        this.triangulos.splice(indice, 1);
+      }else {
+        //console.log("Se agregará un triángulo de forma aleeatoria");
+        let p1 = generarPuntoAleatorio(width, height);
+        let p2 = generarPuntoAleatorio(width, height);
+        let p3 = generarPuntoAleatorio(width, height);
+        let color = randomColor();
+        let alpha = 0.1 + Math.random() * 0.9;
+        this.triangulos.push(new Triangulo(p1, p2, p3, color, alpha));
+      }
+    }
+  }
+
+  imprimirIndividuo(){
+    console.log("{Individuo: " + this.id + ", Fitness: " + this.fitness + "}");
   }
 
   //Metodo que crea una copia de esta instancia cuyos cambios en la copia no afectan al original
@@ -223,6 +255,9 @@ class Individuo {
     const newIndividuo = new Individuo(this.imagenIndividuo);
     newIndividuo.triangulos = this.triangulos.map(triangulo => triangulo.clone());
     newIndividuo.fitness = this.fitness;
+    newIndividuo.initiateImagenIndividuo();
+    this.id = asignId;
+    asignId++;
     return newIndividuo;
   }
 }
@@ -237,11 +272,13 @@ class Poblacion {
   }
 
 
-  calcularFitness(imagenObjetivo){
+  calcularFitness(){
+    console.log("Entra a Calcular fitness");
     for(let individuo of this.individuos){
       individuo.initiateImagenIndividuo();
-      individuo.calcThisfitness(imagenObjetivo);
+      individuo.calcThisfitness(this.imagenObjetivo);
     }
+    console.log("Ordena lista de individuos");
     this.individuos.sort((a, b) => a.fitness - b.fitness);
   }
 
@@ -249,7 +286,7 @@ class Poblacion {
   
   combinar(individuo1, individuo2){
     let puntoCruce = Math.floor(Math.random() * individuo1.triangulos.length);
-
+    
     // Crea los nuevos arreglos de triángulos
     let triangulos1 = individuo1.triangulos.slice(0, puntoCruce).concat(individuo2.triangulos.slice(puntoCruce));
     let triangulos2 = individuo2.triangulos.slice(0, puntoCruce).concat(individuo1.triangulos.slice(puntoCruce));
@@ -264,14 +301,18 @@ class Poblacion {
     nuevoIndividuo2.triangulos = triangulos2;
     nuevoIndividuo2.initiateImagenIndividuo();
     nuevoIndividuo2.calcThisfitness(this.imagenObjetivo);
+    console.log("Combinacion realizada...");
     if (nuevoIndividuo1.fitness < nuevoIndividuo2.fitness) {
       return nuevoIndividuo1;
-  } else {
-      return nuevoIndividuo2;
+    } else {
+        return nuevoIndividuo2;
+    }
   }
 
-
-
+  imprimirPoblacion(){
+    for(let individuo of this.individuos){
+      individuo.imprimirIndividuo();
+    }
   }
 
 }
@@ -325,113 +366,173 @@ function initPoblacion(imagenObjetivo){
   return poblacion;
 }
 
+function arrayContainsArray(arr, subArr) {
+  return arr.some(a => a.length === subArr.length && a.every((v, i) => v === subArr[i]));
+}
+
+
+/**
+ * Funcion que recibe un fitness y una población y revisa si ya hay algun individuo con este fitness
+ * retorna false si hay un fitness igual true si no hay ninguno igual
+ */
+function fitnessRepetido(fitness, poblacion) {
+  return !poblacion.individuos.some(individuo => Math.abs(individuo.fitness - fitness) < 1e-6);
+}
+
+
+
 /**
  * Funcion para iniciar el algoritmo Genetico
  */
 
-function initGeneticArt(){
-  console.log("Se inicia el algoritmo genetico...");
+function initGeneticArt() {
+  console.log("Se inicia el algoritmo genético...");
+  const inicio = performance.now();
+  let lblBestFitness = document.getElementById("ValueFitness");
   let contador1 = 0;
   let imgElement = document.getElementById("imageSrc");
   let mat = cv.imread(imgElement);
-  console.log(mat.ucharPtr(12,3));
+  console.log(mat.ucharPtr(12, 3));
   width = imgElement.naturalWidth;
   height = imgElement.naturalHeight;
-  
-  // let inputElement = document.getElementById("fileInput");
-  // Obtener las dimensiones de la imagen
-  
-  // matriz del tamaño de la imagen
+
+  // Crear matriz del tamaño de la imagen
   let src = new cv.Mat(height, width, cv.CV_8UC4);
-  // Llena la matriz con el color blanco (255, 255, 255)
-  src.setTo(new cv.Scalar(255,255,255, 255));
-  cv.imshow('canvasOutput', src);
-  console.log("color: " + src.ucharPtr(12,3));
-  // La primera población será completamente aleatoria, es un punto de inicio
+  src.setTo(new cv.Scalar(255, 255, 255, 255));
+  
+  console.log("color: " + src.ucharPtr(12, 3));
+
+  // Inicializar población padre
   let poblacionPadre = initPoblacion(mat);
+  poblacionPadre.calcularFitness(mat);
+  //poblacionPadre.individuos[0].dibujarIndividuo();
+  cv.imshow('canvasOutput', src);
+  //setTimeout(iterar, 0);
+  let listaFitnessMejores = [];
 
-  //poblacionPadre.individuos[0].dibujarIndividuo(src);
+  function iterar() {
+    console.log("Lista mejores fitness: "+ listaFitnessMejores);
+    if (contador1 >= maxGenerationsValue) {
+      const fin = performance.now(); // Tiempo final
+      //ataChart(listaFitnessMejores);
+      return;
+    }
 
-  while (contador1 < maxGenerationsValue){
-    console.log("Generación número: " + contador1);
+    console.log("Generación número: " + (contador1+1));
     let thisPoblacion = new Poblacion(indivXGenerationValue, mat);
     let mejoresIndividuos = [];
-    //let nuevaListaIndividuos = [];
-  
-    // parte seleccionar
-   
-    let porcentajeSeleccionados = percentTop*0.01;
+
+    // Parte seleccionar
+    let porcentajeSeleccionados = percentTop * 0.01;
     let cantidadSeleccionados = Math.round(porcentajeSeleccionados * indivXGenerationValue);
-    mejoresIndividuos = poblacionPadre.individuos.splice(0, cantidadSeleccionados);
+    for (let i = 0; i < cantidadSeleccionados; i++) {
+      mejoresIndividuos.push(poblacionPadre.individuos[i].clone());
+    }
+
+
+    for (let ind in mejoresIndividuos) {
+      console.log("Fitness de los mejores individuos: " + mejoresIndividuos[ind].fitness);
+    } 
+
     for (let i = 0; i < mejoresIndividuos.length; i++) {
       thisPoblacion.individuos.push(mejoresIndividuos[i].clone());
     }
-    console.log ("cantidad de individuos seleccionados: "+ cantidadSeleccionados);
+    console.log("cantidad de individuos seleccionados: " + cantidadSeleccionados);
 
-    // parte combinar
- 
-    let porcentajeCombinar = percentCombine*0.01;
+    // Parte combinar
+    let porcentajeCombinar = percentCombine * 0.01;
     let cantidadCombinar = Math.round(porcentajeCombinar * indivXGenerationValue);
-
     let countCombinaciones = 0;
+    
+    let combinacionesRealizadas = [];
 
-    while(countCombinaciones <= cantidadCombinar){
+    while (countCombinaciones < cantidadCombinar) {
       let indice1 = Math.floor(Math.random() * cantidadSeleccionados);
       let indice2 = Math.floor(Math.random() * cantidadSeleccionados);
-      let individuo1 = mejoresIndividuos[indice1].clone(); 
-      let individuo2 = mejoresIndividuos[indice2].clone(); 
-      let nuevoIndividuo = thisPoblacion.combinar(individuo1, individuo2);
-      thisPoblacion.individuos.push(nuevoIndividuo);
-      countCombinaciones++;
+      if (indice1 !== indice2){
+        let combinacion1 = [indice1, indice2];
+        let combinacion2 = [indice2, indice1];
+        if (!arrayContainsArray(combinacionesRealizadas, combinacion1)) {
+          combinacionesRealizadas.push(combinacion1);
+          combinacionesRealizadas.push(combinacion2); 
+          let individuo1 = mejoresIndividuos[indice1].clone();
+          let individuo2 = mejoresIndividuos[indice2].clone();
+          if (individuo1.fitness !== individuo2.fitness){
+            let nuevoIndividuo = thisPoblacion.combinar(individuo1, individuo2);
+            let validaFitness = fitnessRepetido(nuevoIndividuo.fitness, thisPoblacion);
+            if (validaFitness){ 
+              thisPoblacion.individuos.push(nuevoIndividuo);
+              countCombinaciones++;
+            }
+          }
+        }
+      }
     }
+    console.log("cantidad de individuos combinados: " + cantidadCombinar);
 
-    console.log ("cantidad de individuos combinados: "+ cantidadCombinar);
-
-    // parte mutar
-  
-    let porcentajeMutar = percentMutate*0.01;
+    // Parte mutar
+    let porcentajeMutar = percentMutate * 0.01;
     let cantidadMutar = Math.round(porcentajeMutar * indivXGenerationValue);
-    
-
     let countMutaciones = 0;
-    
-    while(countMutaciones <= cantidadMutar){
+    let individuosMutados = [];
+    while (countMutaciones < cantidadMutar) {
       let indice = Math.floor(Math.random() * cantidadSeleccionados);
-      let individuo = mejoresIndividuos[indice].clone();
-      individuo.mutar();
-     
-      thisPoblacion.individuos.push(individuo);
-      countMutaciones++;
+      if (!individuosMutados.includes(indice)) {
+        
+        console.log("Individuos Mutados: " + individuosMutados);
+        let individuo = mejoresIndividuos[indice].clone();
+        individuo.mutar();
+        individuo.calcThisfitness(mat);
+        let validaFitness = fitnessRepetido(individuo.fitness, thisPoblacion);
+        if (validaFitness){
+          thisPoblacion.individuos.push(individuo);
+          individuosMutados.push(indice);
+          countMutaciones++;
+        }
+      }
     }
+    console.log("cantidad de individuos mutados: " + cantidadMutar);
 
-    console.log ("cantidad de individuos mutados: "+ cantidadMutar);
-  
-    //poblacion.individuos = nuevaListaIndividuos;
+    // Calcular fitness
     thisPoblacion.calcularFitness(mat);
-    
-    // calcular fitness
-    // ordenamos la nuevaListaIndividuos
+    thisPoblacion.imprimirPoblacion();
+    //console.log("Fitness de la población calculada... ");
+    //let listaFitness = [];
+    //console.log("Se crea lista fitness...");
+    //for (let individuo of thisPoblacion.individuos) {
+    //  listaFitness.push(individuo.fitness);
+    //}
+    //console.log("Fitness de la generación: " + listaFitness);
 
-    // parte nueva generacion
-
-    //repetir xd
-    //let mejorIndividuo = thisPoblacion.individuos[0];
-   // mejorIndividuo.dibujarIndividuo(src);
-    
+    // Dibujar el mejor individuo de esta generación
+    let mejorIndividuo = thisPoblacion.individuos[0];
+    src.setTo(new cv.Scalar(255, 255, 255, 255));
+    mejorIndividuo.dibujarIndividuo(src);
+    cv.imshow('canvasOutput', src);
+    lblBestFitness.textContent = mejorIndividuo.fitness;
+    listaFitnessMejores.push(mejorIndividuo.fitness);
+    // Asignar nueva población
     poblacionPadre = thisPoblacion;
 
+    // Incrementar el contador y programar la siguiente iteración
     contador1++;
+    //requestAnimationFrame(iterar); // Usar setTimeout para ceder el control al navegador y se actualice el DOM
+    addDataToChart(contador1, mejorIndividuo.fitness);
+    setTimeout(iterar,0);
   }
-  console.log("hay estos individuos en poblacionPadre: "+poblacionPadre.individuos.length);
-  let auxiliar = 0;
-  for (individuo of poblacionPadre.individuos){ {
+  // Iniciar las iteraciones
+  iterar();
 
-    individuo.dibujarIndividuo(src);
-    console.log(individuo);
-    console.log("Dibujando individuo...  " + auxiliar);
-    auxiliar++;
-  }}
-  cv.imshow('canvasOutput', src);
+  //console.log("hay estos individuos en poblacionPadre: "+poblacionPadre.individuos.length);
+  //let auxiliar = 0;
+  //for (individuo of poblacionPadre.individuos){ {
+//
+  //  individuo.dibujarIndividuo(src);
+  //  console.log(individuo);
+  //  console.log("Dibujando individuo...  " + auxiliar);
+  //  auxiliar++;
+  //}}
+  //cv.imshow('canvasOutput', src);
 }
 
 
@@ -455,10 +556,44 @@ function cargar(){
   }
 };
 
-var Module = {
-  // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-  onRuntimeInitialized() {
-    document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-  }
+let chart;
+function initDataChart() {
+  const ctx = document.getElementById('myChart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: [], // Etiquetas iniciales vacías
+      datasets: [{
+        label: 'Fitness por Generacion',
+        data: [], // Datos iniciales vacíos
+        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Generaciones'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Fitness'
+                }
+            }
+        }
+    }
+  });
+}
 
-};
+function addDataToChart(label, data) {
+  setTimeout(() => {
+    chart.data.labels.push(label); // Agrega la nueva etiqueta
+    chart.data.datasets[0].data.push(data); // Agrega el nuevo dato
+    chart.update(); // Actualiza el gráfico
+  }, 0);
+}
