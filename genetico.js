@@ -194,9 +194,12 @@ class Individuo {
     let src = new cv.Mat(height, width, cv.CV_8UC4);
   // Llena la matriz con el color blanco (255, 255, 255)
     src.setTo(new cv.Scalar(255,255,255, 255));
+    if(this.imagenIndividuo != null){
+      this.imagenIndividuo.delete();
+    }
     this.imagenIndividuo = src;
     this.dibujarIndividuo(this.imagenIndividuo);
-    }
+      }
   dibujarIndividuo(src){
     for(let triangule of this.triangulos){
       triangule.dibujar(src);
@@ -532,7 +535,7 @@ function initGeneticArt() {
     console.log("cantidad de individuos mutados: " + cantidadMutar);
 
     // Calcular fitness
-    thisPoblacion.calcularFitness(mat);
+    thisPoblacion.calcularFitness();
 
     // Dibujar el mejor individuo de esta generación
     let mejorIndividuo = thisPoblacion.individuos[0];
@@ -599,13 +602,13 @@ function initDataChart() {
     data: {
       labels: [], // Etiquetas iniciales vacías
       datasets: [{
-        label: 'Mejor Fitness por Generacion',
+        label: 'Fitness promedio por generacion',
         data: [], // Datos iniciales vacíos
         backgroundColor: 'rgba(75, 192, 192, 0.2)',
         borderColor: 'rgba(75, 192, 192, 1)',
         borderWidth: 1
       },{
-        label: 'Fitness promedio por generacion',
+        label: 'Mejor Fitness por generacion',
         data: [], // Datos iniciales vacíos
         backgroundColor: 'rgba(255, 99, 132, 0.2)',
         borderColor: 'rgba(255, 6, 10, 1)',
